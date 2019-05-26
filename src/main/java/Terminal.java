@@ -122,6 +122,25 @@ public class Terminal {
 		// printFileSystem();
 	}
 
+	void displayAllSubDirectories(File directory) {
+
+		if (FileSystem.currentFS.containsKey(directory)) {
+
+			List<File> subDirectories = FileSystem.currentFS.get(directory);
+
+			String subDir = "";
+			for (int i = 0; i < subDirectories.size(); i++) {
+				subDir = subDir + subDirectories.get(i).getName() + "  ";
+			}
+
+			System.out.println(subDir);
+
+		} else {
+			System.out.println("ERR: Can't ls , dir not found");
+		}
+
+	}
+
 	/**
 	 * This command is used to print all the subDirectories in a directory
 	 * 
@@ -129,6 +148,87 @@ public class Terminal {
 	 */
 	void executeLs(Command command) {
 
+		// Directory whose first level sub directories are to be shown
+		File destinationDirectory = new File("", Type.DIRECTORY.toString(), "");
+		String destinationDirectoryName = "";
+		String destinationDirectoryAbsPath = "";
+
+		String destinationDirectoryPathFromCommand = "";
+
+		if (command.getArgs().isEmpty()) {
+			displayAllSubDirectories(pwd);
+			return;
+		}
+
+		destinationDirectoryPathFromCommand = command.getArgs().get(0);
+
+		// If root
+		if (("/").equals(destinationDirectoryPathFromCommand)) {
+
+			destinationDirectory = File.getRootDirectory();
+			displayAllSubDirectories(destinationDirectory);
+
+			return;
+		}
+
+		// CASE: Absolute Path
+		if (("/").equals(Character.toString(destinationDirectoryPathFromCommand.charAt(0)))) {
+
+			List<String> destPathFoldersList = Arrays.asList(destinationDirectoryPathFromCommand.split("/"));
+
+			String absolutePathToDestinationDirectory = destPathFoldersList.get(destPathFoldersList.size() - 1);
+			String pathToDestinationDirectory = null;
+
+			if (destPathFoldersList.size() == 1) {
+				pathToDestinationDirectory = "/";
+			} else {
+				pathToDestinationDirectory = String.join("/",
+						destPathFoldersList.subList(0, destPathFoldersList.size()));
+			}
+
+			destinationDirectory.setAbsolutePath(pathToDestinationDirectory);
+			destinationDirectory.setType(Type.DIRECTORY.toString());
+			destinationDirectory.setName(destPathFoldersList.get(destPathFoldersList.size() - 1));
+
+			displayAllSubDirectories(destinationDirectory);
+
+			return;
+		}
+
+		// CASE: Relative Path
+		else {
+
+			System.out.println("HEEEEREEE");
+			List<String> destPathFoldersList = Arrays.asList(destinationDirectoryPathFromCommand.split("/"));
+
+			if (pwd.equals(File.getRootDirectory())) {
+				destinationDirectory.setAbsolutePath(pwd.getAbsolutePath() + destinationDirectoryPathFromCommand);
+			} else {
+				destinationDirectory.setAbsolutePath(pwd.getAbsolutePath() + "/" + destinationDirectoryPathFromCommand);
+			}
+
+			// case: ls xyz
+			if (destPathFoldersList.size() == 1) {
+
+				destinationDirectory.setType(Type.DIRECTORY.toString());
+				destinationDirectory.setName(destinationDirectoryPathFromCommand);
+
+			} else {
+
+				/**
+				 * command : ls a/b/c then destinationDirectoryName = c
+				 */
+				destinationDirectoryName = destinationDirectoryPathFromCommand
+						.split("/")[destinationDirectoryPathFromCommand.split("/").length - 1];
+				destinationDirectory.setType(Type.DIRECTORY.toString());
+				destinationDirectory.setName(destinationDirectoryName);
+			}
+
+			displayAllSubDirectories(destinationDirectory);
+
+			return;
+
+		}
 
 	}
 
