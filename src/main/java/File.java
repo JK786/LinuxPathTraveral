@@ -46,7 +46,7 @@ public class File {
 	}
 
 	public static File getRootDirectory() {
-		File root = new File("/", Type.DIRECTORY.toString(), "-");
+		File root = new File("/", Type.DIRECTORY.toString(), "/");
 		return root;
 	}
 

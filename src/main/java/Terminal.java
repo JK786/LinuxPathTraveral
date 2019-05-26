@@ -1,6 +1,7 @@
 
-import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 import linux.path.traversal.enums.Type;
@@ -43,7 +44,7 @@ public class Terminal {
 	}
 
 	public Terminal() {
-		pwd = new File("/", Type.DIRECTORY.toString(), "-");
+		pwd = new File("/", Type.DIRECTORY.toString(), "/");
 		initialiseCommandList();
 	}
 
@@ -66,7 +67,8 @@ public class Terminal {
 
 	void executePwd(Command c) {
 
-		System.out.println("PATH: " + pwd);
+		System.out.println("PATH: " + pwd.getAbsolutePath());
+
 	}
 
 	/**
@@ -77,7 +79,6 @@ public class Terminal {
 	 * somewhere , retrieving it at the start of the terminal session and
 	 * working on it .
 	 * 
-	 * @param c
 	 */
 	void executeSessionCommand(Command command) {
 		pwd = File.getRootDirectory();
@@ -90,7 +91,20 @@ public class Terminal {
 	void executeMkdir(Command c) {
 
 		// making only in the present working directory
-		File directoryToBeCreated = new File(c.getArgs().get(0), Type.DIRECTORY.toString(), pwd.getName());
+
+		File directoryToBeCreated = null;
+
+		String absolutePathOfDirectoryBeingCreated = "";
+		String nameOfDirectoryToBeCreated = c.getArgs().get(0);
+
+		if (pwd.equals(File.getRootDirectory())) {
+			absolutePathOfDirectoryBeingCreated = pwd.getAbsolutePath() + nameOfDirectoryToBeCreated;
+		} else {
+			absolutePathOfDirectoryBeingCreated = pwd.getAbsolutePath() + "/" + nameOfDirectoryToBeCreated;
+		}
+
+		directoryToBeCreated = new File(nameOfDirectoryToBeCreated, Type.DIRECTORY.toString(),
+				absolutePathOfDirectoryBeingCreated);
 
 		if (FileSystem.currentFS.containsKey(pwd)) {
 
@@ -103,7 +117,9 @@ public class Terminal {
 			FileSystem.currentFS.put(pwd, subDirectories);
 		}
 
-		printFileSystem();
+		FileSystem.currentFS.put(directoryToBeCreated, new ArrayList<File>());
+
+		// printFileSystem();
 	}
 
 	/**
@@ -113,33 +129,17 @@ public class Terminal {
 	 */
 	void executeLs(Command command) {
 
-		// for current directory
-
-		// File directoryToSearchIn = pwd;
-		// int numberOfArgumentsToCommand = command.getArgs().size();
-		//
-		// if (numberOfArgumentsToCommand != 0) {
-		//
-		// for(int i=0;i<numberOfArgumentsToCommand;i++) {
-		//
-		// String directoryName = command.getArgs().get(i).split("/")[]
-		// directoryToSearchIn = new File(command.getArgs().))
-		// }
-		// }
-		//
-		// System.out.println(directoryToSearchIn);
-		//
-		// printFileSystem();
-		// if (FileSystem.currentFS.containsKey(directoryToSearchIn)) {
-		// System.out.println(FileSystem.currentFS.get(directoryToSearchIn));
-		// }
 
 	}
 
 	void executeCd(Command command) {
 
-		File startingDirectory = pwd;
-		File destinationDirectory = pwd;
+		File startingDirectory = new File("", Type.DIRECTORY.toString(), "");
+		File destinationDirectory = new File("", Type.DIRECTORY.toString(), "");
+
+		String destinationDirectoryName = "";
+		String destinationDirectoryAbsPath = "";
+
 		if (command.getArgs().size() == 0) {
 			// No support for changing to ~ . This would happen in a normal
 			// terminal.
@@ -149,19 +149,52 @@ public class Terminal {
 
 		else {
 
-			String destinationDirectoryPath = command.getArgs().get(0);
+			// This path includes the destination directory as well
+			String destinationDirectoryPathFromCommand = command.getArgs().get(0);
+
+			// case: cd ..
+			if (("..").equals(destinationDirectoryPathFromCommand)) {
+
+				// can't go beyond root
+				if (pwd.equals(File.getRootDirectory())) {
+
+				} else {
+					List<String> directoriesFromRootToPwd = Arrays.asList(pwd.getAbsolutePath().trim().split("/"));
+
+					// CASE: "/a".split("/")
+					if (directoriesFromRootToPwd.size() == 1 || ("").equals(directoriesFromRootToPwd.get(0))) {
+						pwd = File.getRootDirectory();
+
+					}
+
+					else {
+						// going level up in directory heirarchy
+						directoriesFromRootToPwd = Arrays.asList(pwd.getAbsolutePath().split("/"));
+						destinationDirectoryName = pwd.getAbsolutePath().split("/")[directoriesFromRootToPwd.size()
+								- 2];
+						destinationDirectoryAbsPath = String.join("/",
+								directoriesFromRootToPwd.subList(0, directoriesFromRootToPwd.size() - 1));
+						pwd = new File(destinationDirectoryName, Type.DIRECTORY.toString(),
+								destinationDirectoryAbsPath);
+					}
+
+				}
+
+				return;
+
+			}
 
 			// Destination directory is root directory
-			if (("/").equals(destinationDirectoryPath)) {
+			if (("/").equals(destinationDirectoryPathFromCommand)) {
 				pwd = File.getRootDirectory();
 				return;
 			}
 
-			if (("/").equals(Character.toString(destinationDirectoryPath.charAt(0)))) {
+			if (("/").equals(Character.toString(destinationDirectoryPathFromCommand.charAt(0)))) {
 
 				// operate in root directory
 				// String destDirectory = pathToDirectory.sp
-				List<String> destPathFoldersList = Arrays.asList(destinationDirectoryPath.split("/"));
+				List<String> destPathFoldersList = Arrays.asList(destinationDirectoryPathFromCommand.split("/"));
 
 				String absolutePathToDestinationDirectory = destPathFoldersList.get(destPathFoldersList.size() - 1);
 				String pathToDestExcludingDestinationDirectory = null;
@@ -170,7 +203,7 @@ public class Terminal {
 					pathToDestExcludingDestinationDirectory = "/";
 				} else {
 					pathToDestExcludingDestinationDirectory = String.join("/",
-							destPathFoldersList.subList(0, destPathFoldersList.size() - 1));
+							destPathFoldersList.subList(0, destPathFoldersList.size()));
 				}
 
 				destinationDirectory.setAbsolutePath(pathToDestExcludingDestinationDirectory);
@@ -182,6 +215,7 @@ public class Terminal {
 					return;
 				} else {
 					System.out.println("ERR:");
+					return;
 				}
 
 			}
@@ -192,34 +226,38 @@ public class Terminal {
 				// String destDirectory = pathToDirectory.sp
 
 				System.out.println("HEEEEREEE");
-				List<String> destPathFoldersList = Arrays.asList(destinationDirectoryPath.split("/"));
-				String destinationDirectoryName;
-				String absolutePathToDestinationDirectory;
+				List<String> destPathFoldersList = Arrays.asList(destinationDirectoryPathFromCommand.split("/"));
+
+				if (pwd.equals(File.getRootDirectory())) {
+					destinationDirectory.setAbsolutePath(pwd.getAbsolutePath() + destinationDirectoryPathFromCommand);
+				} else {
+					destinationDirectory
+							.setAbsolutePath(pwd.getAbsolutePath() + "/" + destinationDirectoryPathFromCommand);
+				}
 
 				// case: cd xyz
-				if (destPathFoldersList.isEmpty()) {
-					destinationDirectoryName = destinationDirectoryPath;
-					destinationDirectory.setAbsolutePath(pwd.getAbsolutePath());
+				if (destPathFoldersList.size() == 1) {
+
 					destinationDirectory.setType(Type.DIRECTORY.toString());
-					destinationDirectory.setName(destinationDirectoryName);
+					destinationDirectory.setName(destinationDirectoryPathFromCommand);
 
 				} else {
 
-					// case: cd a/b/c
-					absolutePathToDestinationDirectory = destPathFoldersList.get(destPathFoldersList.size() - 1);
-
-					String pathToDestExcludingDestinationDirectory = pwd.getAbsolutePath()
-							+ String.join("/", destPathFoldersList.subList(0, destPathFoldersList.size() - 1));
-					destinationDirectory.setAbsolutePath(pathToDestExcludingDestinationDirectory);
+					/**
+					 * command : cd a/b/c then destinationDirectoryName = c
+					 */
+					destinationDirectoryName = destinationDirectoryPathFromCommand
+							.split("/")[destinationDirectoryPathFromCommand.split("/").length - 1];
 					destinationDirectory.setType(Type.DIRECTORY.toString());
-					destinationDirectory.setName(destPathFoldersList.get(destPathFoldersList.size() - 1));
+					destinationDirectory.setName(destinationDirectoryName);
 				}
 
 				if (FileSystem.currentFS.containsKey(destinationDirectory)) {
 					pwd = destinationDirectory;
 					return;
 				} else {
-					System.out.println("ERR:");
+					System.out.println("ERR: Directory does not exist.Can't change directory");
+					return;
 				}
 			}
 
@@ -232,7 +270,7 @@ public class Terminal {
 		// System.out.println("Processing the command " + c);
 
 		if (validCommands.contains(c)) {
-			System.out.println("Processing the valid command " + c);
+			// System.out.println("Processing the valid command " + c);
 
 			if (c.getCommand().equals("mkdir")) {
 				executeMkdir(c);
@@ -265,7 +303,7 @@ public class Terminal {
 	public static void main(String args[]) {
 		Terminal T = new Terminal();
 
-		System.out.print("$Starting the linux path traversal application \n");
+		System.out.println("$Starting the linux path traversal application");
 		System.out.print("$");
 
 		Scanner myObj = new Scanner(System.in);
@@ -273,7 +311,6 @@ public class Terminal {
 		while (true) {
 			Command c = T.getCommandFromInput(myObj.nextLine());
 
-			System.out.println("The command is : " + c);
 			T.processCommand(c);
 			System.out.print("$");
 
