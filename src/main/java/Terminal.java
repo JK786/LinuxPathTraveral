@@ -8,15 +8,13 @@ import linux.path.traversal.enums.Type;
 
 public class Terminal {
 
-	public static File pwd; // This at all stages gives the path to the
-							// present working directory
+	public static File pwd;
+
+	// List of commands that we support
 	public static List<Command> validCommands = new ArrayList<Command>();
 
-	public static List<Command> sessionHistory = new ArrayList<Command>(); // Used
-																			// to
-	// represent
-	// terminal session
-	// history
+	// List of commands executed in a session
+	public static List<Command> sessionHistory = new ArrayList<Command>();
 
 	void printHistory() {
 		// PlaceHolder to print the history of the terminal
@@ -24,22 +22,22 @@ public class Terminal {
 
 	void initialiseCommandList() {
 
-		Command c = new Command("mkdir", null);
+		Command c = new Command("mkdir", null, null);
 		validCommands.add(c);
 
-		c = new Command("ls", null);
+		c = new Command("ls", null, null);
 		validCommands.add(c);
 
-		c = new Command("cd", null);
+		c = new Command("cd", null, null);
 		validCommands.add(c);
 
-		c = new Command("rm", null);
+		c = new Command("rm", null, null);
 		validCommands.add(c);
 
-		c = new Command("pwd", null);
+		c = new Command("pwd", null, null);
 		validCommands.add(c);
 
-		c = new Command("session", null);
+		c = new Command("session", null, null);
 		validCommands.add(c);
 	}
 
@@ -52,13 +50,16 @@ public class Terminal {
 
 		Command c = new Command();
 
-		c.setCommand(input.split("\\s+")[0]); // Regex to take care of
-												// unnecessary spaces between
-												// commandline arguments
+		// Regex to take care of varying length of spaces between commands
+		c.setCommand(input.split("\\s+")[0]);
 
 		List<String> arguments = Arrays.asList(Arrays.copyOfRange(input.split("\\s+"), 1, input.split("\\s+").length));
 
-		// removing the last slashes '/'
+		/*
+		 * removing the last slashes '/' Ex: cd a/b/c/ then remove the last
+		 * slash for processing and logic has been written that way.
+		 */
+		linuxPathTraversalUtils.removeLastSlash(arguments);
 
 		c.setArgs(arguments);
 

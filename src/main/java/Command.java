@@ -1,17 +1,35 @@
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-
 public class Command {
 
-	private String command; // Name of the command
-	private Map<String, String> optionAndValue; // For extendibility : No
-												// supportProvided
+	// Name of the command
+	private String command;
+
+	// For extendibility purpose in the future
+	private Map<String, String> optionAndValue;
+
 	private List<String> args;
+
+	/**
+	 * Default Constructor
+	 */
+	Command() {
+
+	}
+
+	/**
+	 * Constructor
+	 * 
+	 * @param command
+	 * @param optionAndValue
+	 */
+
+	Command(String command, List<String> args, Map<String, String> optionAndValue) {
+		this.command = command;
+		this.args = args;
+		this.optionAndValue = optionAndValue;
+	}
 
 	@Override
 	public String toString() {
@@ -24,15 +42,6 @@ public class Command {
 
 	public void setArgs(List<String> args) {
 		this.args = args;
-	}
-
-	Command() {
-
-	}
-
-	Command(String command, Map<String, String> optionAndValue) {
-		this.command = command;
-		this.optionAndValue = optionAndValue;
 	}
 
 	public String getCommand() {
@@ -56,7 +65,7 @@ public class Command {
 	 * Will be used when contains is called in a list or maybe someone searches
 	 * history with the command.
 	 * 
-	 * PS: I generated this using eclipe.
+	 * PS:Generated this using eclipse.
 	 */
 
 	@Override

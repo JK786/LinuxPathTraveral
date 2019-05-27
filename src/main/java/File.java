@@ -11,9 +11,28 @@ import linux.path.traversal.enums.Type;
 
 public class File {
 
-	private String type; // Could be file or directory
+	/**
+	 * {@link Type enum for signifying if it is a File or Directory}
+	 */
+	private String type;
+
 	private String name;
-	private String absolutePath; // Absolute path from root to dire
+
+	// Path from root to directory including the directory name
+	private String absolutePath;
+
+	/**
+	 * Parameterized Constructor
+	 * 
+	 * @param name
+	 * @param type
+	 * @param absolutePath
+	 */
+	public File(String name, String type, String absolutePath) {
+		this.name = name;
+		this.type = type;
+		this.absolutePath = absolutePath;
+	}
 
 	public String getType() {
 		return this.type;
@@ -36,12 +55,6 @@ public class File {
 	}
 
 	public void setAbsolutePath(String absolutePath) {
-		this.absolutePath = absolutePath;
-	}
-
-	public File(String name, String type, String absolutePath) {
-		this.name = name;
-		this.type = type;
 		this.absolutePath = absolutePath;
 	}
 
@@ -90,10 +103,6 @@ public class File {
 	@Override
 	public String toString() {
 		return "File [type=" + type + ", name=" + name + ", absolutePath=" + absolutePath + "]";
-	}
-
-	public File() {
-		// TODO Auto-generated constructor stub
 	}
 
 }
