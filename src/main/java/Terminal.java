@@ -89,44 +89,6 @@ public class Terminal {
 
 	}
 
-	// void executeMkdir(Command c) {
-	//
-	// // making only in the present working directory
-	//
-	// File directoryToBeCreated = null;
-	//
-	// String absolutePathOfDirectoryBeingCreated = "";
-	// String nameOfDirectoryToBeCreated = c.getArgs().get(0);
-	//
-	// if (pwd.equals(File.getRootDirectory())) {
-	// absolutePathOfDirectoryBeingCreated = pwd.getAbsolutePath() +
-	// nameOfDirectoryToBeCreated;
-	// } else {
-	// absolutePathOfDirectoryBeingCreated = pwd.getAbsolutePath() + "/" +
-	// nameOfDirectoryToBeCreated;
-	// }
-	//
-	// directoryToBeCreated = new File(nameOfDirectoryToBeCreated,
-	// Type.DIRECTORY.toString(),
-	// absolutePathOfDirectoryBeingCreated);
-	//
-	// if (FileSystem.currentFS.containsKey(pwd)) {
-	//
-	// FileSystem.currentFS.get(pwd).add(directoryToBeCreated);
-	//
-	// } else {
-	//
-	// List<File> subDirectories = new ArrayList<File>();
-	// subDirectories.add(directoryToBeCreated);
-	// FileSystem.currentFS.put(pwd, subDirectories);
-	// }
-	//
-	// FileSystem.currentFS.put(directoryToBeCreated, new ArrayList<File>());
-	//
-	// // printFileSystem();
-	// }
-	//
-
 	File getParentDirectory(File directory) {
 
 		File parentDirectory;
@@ -136,7 +98,6 @@ public class Terminal {
 		String parentDirAbsPath = "";// String.join("/",
 										// destPathFoldersList.subList(0,
 										// destPathFoldersList.size() - 1));
-		String parentDirName = destPathFoldersList.get(destPathFoldersList.size() - 2);
 
 		if (destPathFoldersList.size() == 2 && destPathFoldersList.get(0).equals("")) {
 			// This means the parent directory has got to
@@ -144,119 +105,18 @@ public class Terminal {
 
 		}
 
+		String parentDirName = destPathFoldersList.get(destPathFoldersList.size() - 2);
+
 		parentDirAbsPath = String.join("/", destPathFoldersList.subList(0, destPathFoldersList.size() - 1));
 		parentDirectory = new File(parentDirName, Type.DIRECTORY.toString(), parentDirAbsPath);
 
 		return parentDirectory;
 	}
 
-	void makeDirectory(File directory) {
+	void makeDirectory(File destDirectory, File parentDirectoryOfDestDirectory) {
 
-		if (FileSystem.currentFS.containsKey(directory)) {
-			System.out.println("THIS DIRECTORY ALREADY EXISTS");
-		}
-
-		else {
-
-			System.out.println("------mkdmn");
-			File parentDirectory = getParentDirectory(directory);
-
-			if (FileSystem.currentFS.containsKey(parentDirectory)) {
-
-				FileSystem.currentFS.get(parentDirectory).add(directory);
-				FileSystem.currentFS.put(directory, new ArrayList<File>());
-			}
-		}
-	}
-
-	void executeMkdir(Command command) {
-
-		File destinationDirectory = new File("", Type.DIRECTORY.toString(), "");
-		String destinationDirectoryName = "";
-		String destinationDirectoryAbsPath = "";
-
-		String destinationDirectoryPathFromCommand = "";
-
-		if (command.getArgs().isEmpty()) {
-			// print error
-			return;
-		}
-
-		destinationDirectoryPathFromCommand = command.getArgs().get(0);
-
-		if (("/").equals(destinationDirectoryPathFromCommand)) {
-
-			// Print error that you can't create a root directory
-			return;
-		}
-
-		// absolute path
-		if (("/").equals(Character.toString(destinationDirectoryPathFromCommand.charAt(0)))) {
-
-			List<String> destPathFoldersList = Arrays.asList(destinationDirectoryPathFromCommand.split("/"));
-
-			String absolutePathToDestinationDirectory = destPathFoldersList.get(destPathFoldersList.size() - 1);
-			String pathToDestExcludingDestinationDirectory = null;
-
-			if (destPathFoldersList.size() == 1) {
-				pathToDestExcludingDestinationDirectory = "/";
-			} else {
-				pathToDestExcludingDestinationDirectory = String.join("/",
-						destPathFoldersList.subList(0, destPathFoldersList.size()));
-			}
-
-			destinationDirectory.setAbsolutePath(pathToDestExcludingDestinationDirectory);
-			destinationDirectory.setType(Type.DIRECTORY.toString());
-			destinationDirectory.setName(destPathFoldersList.get(destPathFoldersList.size() - 1));
-
-			if (FileSystem.currentFS.containsKey(destinationDirectory)) {
-				// Then make the directoruy
-				makeDirectory(destinationDirectory);
-				return;
-			} else {
-				System.out.println("ERR: " + destinationDirectory.getAbsolutePath() + " does not exist");
-				return;
-			}
-
-		}
-
-		// relative path
-		else {
-
-			System.out.println("HEEEEREEE");
-
-			List<String> destPathFoldersList = Arrays.asList(destinationDirectoryPathFromCommand.split("/"));
-
-			if (pwd.equals(File.getRootDirectory())) {
-				destinationDirectory.setAbsolutePath(pwd.getAbsolutePath() + destinationDirectoryPathFromCommand);
-			} else {
-				destinationDirectory.setAbsolutePath(pwd.getAbsolutePath() + "/" + destinationDirectoryPathFromCommand);
-			}
-
-			// case: ls xyz
-			if (destPathFoldersList.size() == 1) {
-
-				destinationDirectory.setType(Type.DIRECTORY.toString());
-				destinationDirectory.setName(destinationDirectoryPathFromCommand);
-
-			} else {
-
-				/**
-				 * command : ls a/b/c then destinationDirectoryName = c
-				 */
-				destinationDirectoryName = destinationDirectoryPathFromCommand
-						.split("/")[destinationDirectoryPathFromCommand.split("/").length - 1];
-				destinationDirectory.setType(Type.DIRECTORY.toString());
-				destinationDirectory.setName(destinationDirectoryName);
-			}
-
-			// make the directory
-			makeDirectory(destinationDirectory);
-
-			return;
-
-		}
-
+		FileSystem.currentFS.get(parentDirectoryOfDestDirectory).add(destDirectory);
+		FileSystem.currentFS.put(destDirectory, new ArrayList<File>());
 	}
 
 	void displayAllSubDirectories(File directory) {
@@ -273,105 +133,13 @@ public class Terminal {
 			System.out.println(subDir);
 
 		} else {
-			System.out.println("ERR: Can't ls , dir not found");
+			System.out.println("ERR: Can't ls , dir not found : " + directory.getAbsolutePath());
 		}
 
 	}
 
-	/**
-	 * This command is used to print all the subDirectories in a directory
-	 * 
-	 * @param command
-	 */
-	void executeLs(Command command) {
+	File getDestinationDirectory(Command command) {
 
-		// Directory whose first level sub directories are to be shown
-		File destinationDirectory = new File("", Type.DIRECTORY.toString(), "");
-		String destinationDirectoryName = "";
-		String destinationDirectoryAbsPath = "";
-
-		String destinationDirectoryPathFromCommand = "";
-
-		if (command.getArgs().isEmpty()) {
-			displayAllSubDirectories(pwd);
-			return;
-		}
-
-		destinationDirectoryPathFromCommand = command.getArgs().get(0);
-
-		// If root
-		if (("/").equals(destinationDirectoryPathFromCommand)) {
-
-			destinationDirectory = File.getRootDirectory();
-			displayAllSubDirectories(destinationDirectory);
-
-			return;
-		}
-
-		// CASE: Absolute Path
-		if (("/").equals(Character.toString(destinationDirectoryPathFromCommand.charAt(0)))) {
-
-			List<String> destPathFoldersList = Arrays.asList(destinationDirectoryPathFromCommand.split("/"));
-
-			String absolutePathToDestinationDirectory = destPathFoldersList.get(destPathFoldersList.size() - 1);
-			String pathToDestinationDirectory = null;
-
-			if (destPathFoldersList.size() == 1) {
-				pathToDestinationDirectory = "/";
-			} else {
-				pathToDestinationDirectory = String.join("/",
-						destPathFoldersList.subList(0, destPathFoldersList.size()));
-			}
-
-			destinationDirectory.setAbsolutePath(pathToDestinationDirectory);
-			destinationDirectory.setType(Type.DIRECTORY.toString());
-			destinationDirectory.setName(destPathFoldersList.get(destPathFoldersList.size() - 1));
-
-			displayAllSubDirectories(destinationDirectory);
-
-			return;
-		}
-
-		// CASE: Relative Path
-		else {
-
-			System.out.println("HEEEEREEE");
-			List<String> destPathFoldersList = Arrays.asList(destinationDirectoryPathFromCommand.split("/"));
-
-			if (pwd.equals(File.getRootDirectory())) {
-				destinationDirectory.setAbsolutePath(pwd.getAbsolutePath() + destinationDirectoryPathFromCommand);
-			} else {
-				destinationDirectory.setAbsolutePath(pwd.getAbsolutePath() + "/" + destinationDirectoryPathFromCommand);
-			}
-
-			// case: ls xyz
-			if (destPathFoldersList.size() == 1) {
-
-				destinationDirectory.setType(Type.DIRECTORY.toString());
-				destinationDirectory.setName(destinationDirectoryPathFromCommand);
-
-			} else {
-
-				/**
-				 * command : ls a/b/c then destinationDirectoryName = c
-				 */
-				destinationDirectoryName = destinationDirectoryPathFromCommand
-						.split("/")[destinationDirectoryPathFromCommand.split("/").length - 1];
-				destinationDirectory.setType(Type.DIRECTORY.toString());
-				destinationDirectory.setName(destinationDirectoryName);
-			}
-
-			displayAllSubDirectories(destinationDirectory);
-
-			return;
-
-		}
-
-	}
-
-	void executeCd(Command command) {
-
-		File startingDirectory = new File("", Type.DIRECTORY.toString(), "");
 		File destinationDirectory = new File("", Type.DIRECTORY.toString(), "");
 
 		String destinationDirectoryName = "";
@@ -381,6 +149,8 @@ public class Terminal {
 			// No support for changing to ~ . This would happen in a normal
 			// terminal.
 			// Can be extended as per use case
+
+			destinationDirectory = pwd;
 
 		}
 
@@ -394,13 +164,14 @@ public class Terminal {
 
 				// can't go beyond root
 				if (pwd.equals(File.getRootDirectory())) {
+					destinationDirectory = pwd;
 
 				} else {
 					List<String> directoriesFromRootToPwd = Arrays.asList(pwd.getAbsolutePath().trim().split("/"));
 
 					// CASE: "/a".split("/")
 					if (directoriesFromRootToPwd.size() == 2 && ("").equals(directoriesFromRootToPwd.get(0))) {
-						pwd = File.getRootDirectory();
+						destinationDirectory = File.getRootDirectory();
 
 					}
 
@@ -411,20 +182,24 @@ public class Terminal {
 								- 2];
 						destinationDirectoryAbsPath = String.join("/",
 								directoriesFromRootToPwd.subList(0, directoriesFromRootToPwd.size() - 1));
-						pwd = new File(destinationDirectoryName, Type.DIRECTORY.toString(),
-								destinationDirectoryAbsPath);
+
+						destinationDirectory.setName(destinationDirectoryName);
+						destinationDirectory.setAbsolutePath(destinationDirectoryAbsPath);
+
 					}
 
 				}
 
-				return;
+				return destinationDirectory;
 
 			}
 
 			// Destination directory is root directory
 			if (("/").equals(destinationDirectoryPathFromCommand)) {
-				pwd = File.getRootDirectory();
-				return;
+
+				destinationDirectory.setName("/");
+				destinationDirectory.setAbsolutePath("/");
+				return destinationDirectory;
 			}
 
 			if (("/").equals(Character.toString(destinationDirectoryPathFromCommand.charAt(0)))) {
@@ -446,14 +221,6 @@ public class Terminal {
 				destinationDirectory.setAbsolutePath(pathToDestExcludingDestinationDirectory);
 				destinationDirectory.setType(Type.DIRECTORY.toString());
 				destinationDirectory.setName(destPathFoldersList.get(destPathFoldersList.size() - 1));
-
-				if (FileSystem.currentFS.containsKey(destinationDirectory)) {
-					pwd = destinationDirectory;
-					return;
-				} else {
-					System.out.println("ERR:");
-					return;
-				}
 
 			}
 
@@ -489,15 +256,50 @@ public class Terminal {
 					destinationDirectory.setName(destinationDirectoryName);
 				}
 
-				if (FileSystem.currentFS.containsKey(destinationDirectory)) {
-					pwd = destinationDirectory;
-					return;
-				} else {
-					System.out.println("ERR: Directory does not exist.Can't change directory");
-					return;
-				}
+				return destinationDirectory;
+
 			}
 
+		}
+
+		return destinationDirectory;
+
+	}
+
+	void executeCd(Command command) {
+
+		File destDirectory = getDestinationDirectory(command);
+
+		if (FileSystem.currentFS.containsKey(destDirectory)) {
+			pwd = destDirectory;
+		}
+
+		else {
+			System.out.println("ERR: This directory does not exist : " + destDirectory.getAbsolutePath());
+		}
+
+	}
+
+	void executeLs(Command command) {
+		File destDirectory = getDestinationDirectory(command);
+
+		displayAllSubDirectories(destDirectory);
+	}
+
+	void executeMkdir(Command command) {
+
+		File destDirectory = getDestinationDirectory(command);
+
+		// This dest directory is including the one we have to create.
+		// So we have to move a level up
+
+		File parentDirOfDestDirectory = getParentDirectory(destDirectory);
+
+		if (FileSystem.currentFS.containsKey(parentDirOfDestDirectory)) {
+			makeDirectory(destDirectory, parentDirOfDestDirectory);
+		} else {
+			System.out.println("Cannot create directory as this path doesn't exist : "
+					+ parentDirOfDestDirectory.getAbsolutePath());
 		}
 
 	}
