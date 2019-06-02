@@ -28,28 +28,24 @@ public class Terminal {
 	 */
 	void initialiseCommandList() {
 
-		Command c = new Command("mkdir", null, null);
-		validCommands.add(c);
+		List<String> commandNames = Arrays.asList("mkdir", "ls", "cd", "rm", "d", "pwd", "sessionClear", "showFs");
+		Command c;
 
-		c = new Command("ls", null, null);
-		validCommands.add(c);
+		for (int i = 0; i < commandNames.size(); i++) {
 
-		c = new Command("cd", null, null);
-		validCommands.add(c);
+			if (("rm").equals(commandNames.get(i))) {
+				Map<String, String> validOption = new HashMap<String, String>();
+				validOption.put("d", null);
+				c = new Command(commandNames.get(i), null, validOption);
+				validCommands.add(c);
 
-		c = new Command("rm", null, null);
-		Map<String, String> validOption = new HashMap<String, String>();
-		validOption.put("d", null);
-		validCommands.add(c);
+			} else {
+				c = new Command(commandNames.get(i), null, null);
+				validCommands.add(c);
+			}
 
-		c = new Command("pwd", null, null);
-		validCommands.add(c);
+		}
 
-		c = new Command("session", null, null);
-		validCommands.add(c);
-
-		c = new Command("showFs", null, null);
-		validCommands.add(c);
 	}
 
 	// --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -192,17 +188,12 @@ public class Terminal {
 
 				List<String> destPathFoldersList = Arrays.asList(destinationDirectoryPathFromCommand.split("/"));
 
-				String absolutePathToDestinationDirectory = destPathFoldersList.get(destPathFoldersList.size() - 1);
-				String pathToDestExcludingDestinationDirectory = null;
+				String absolutePathToDestinationDirectory = "";
 
-				if (destPathFoldersList.size() == 1) {
-					pathToDestExcludingDestinationDirectory = "/";
-				} else {
-					pathToDestExcludingDestinationDirectory = String.join("/",
-							destPathFoldersList.subList(0, destPathFoldersList.size()));
-				}
+				absolutePathToDestinationDirectory = String.join("/",
+						destPathFoldersList.subList(0, destPathFoldersList.size()));
 
-				destinationDirectory.setAbsolutePath(pathToDestExcludingDestinationDirectory);
+				destinationDirectory.setAbsolutePath(absolutePathToDestinationDirectory);
 				destinationDirectory.setType(Type.DIRECTORY.toString());
 				destinationDirectory.setName(destPathFoldersList.get(destPathFoldersList.size() - 1));
 
