@@ -11,6 +11,7 @@ import linux.path.traversal.enums.Type;
 
 public class File {
 
+	public static File root = new File("/", Type.DIRECTORY.toString(), "/");
 	/**
 	 * {@link Type enum for signifying if it is a File or Directory}
 	 */
@@ -59,7 +60,6 @@ public class File {
 	}
 
 	public static File getRootDirectory() {
-		File root = new File("/", Type.DIRECTORY.toString(), "/");
 		return root;
 	}
 

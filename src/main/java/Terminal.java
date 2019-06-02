@@ -319,12 +319,16 @@ public class Terminal {
 		// This dest directory is including the one we have to create.
 		// So we have to move a level up
 
+		if (File.getRootDirectory().equals(destDirectory)) {
+			System.out.println("ERR: CANNOT CREATE ROOT DIRECTORY. IT ALREADY EXISTS");
+		}
+
 		File parentDirOfDestDirectory = linuxPathTraversalUtils.getParentDirectory(destDirectory);
 
 		if (FileSystem.currentFS.containsKey(parentDirOfDestDirectory)) {
 			linuxPathTraversalUtils.makeDirectory(destDirectory, parentDirOfDestDirectory);
 		} else {
-			System.out.println("Cannot create directory as this path doesn't exist : "
+			System.out.println("ERR : CANNOT CREATE DIRECTORY AS THIS PATH DOESN'T EXIST : "
 					+ parentDirOfDestDirectory.getAbsolutePath());
 		}
 
@@ -375,6 +379,11 @@ public class Terminal {
 
 		File destinationDirectory = getDestinationDirectory(new Command("rm", args, null));
 
+		if (File.getRootDirectory().equals(destinationDirectory)) {
+			System.out.println("ERR: ILLEGAL OPERATION. CANNOT REMOVE ROOT DIRECTORY");
+			return;
+		}
+
 		if (FileSystem.currentFS.containsKey(destinationDirectory)) {
 
 			// We can only remove a directory provided its empty
@@ -384,11 +393,14 @@ public class Terminal {
 				// You also have to remove it from the list of subdirectories of
 				// its parent directory
 				File parentDirectory = linuxPathTraversalUtils.getParentDirectory(destinationDirectory);
+
 				FileSystem.currentFS.get(parentDirectory).remove(destinationDirectory);
+				return;
 
 			} else {
 				System.out.println("ERR: DIRECTORY " + destinationDirectory.getAbsolutePath()
 						+ " CANNOT BE REMOVED AS IT IS NOT EMPTY");
+				return;
 			}
 
 		} else {
@@ -447,7 +459,7 @@ public class Terminal {
 				executePwd(c);
 			}
 
-			else if (c.getCommand().equals("session")) {
+			else if (c.getCommand().equals("sessionClear")) {
 				executeSessionCommand(c);
 			} else if (c.getCommand().equals("rm")) {
 				executeRemove(c);
