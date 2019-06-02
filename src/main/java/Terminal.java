@@ -1,7 +1,10 @@
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 
 import linux.path.traversal.enums.Type;
@@ -20,6 +23,9 @@ public class Terminal {
 		// PlaceHolder to print the history of the terminal
 	}
 
+	/**
+	 * INITIALISE THE LIST OF VALID COMMANDS SUPPORTED BY THE SYSTEM
+	 */
 	void initialiseCommandList() {
 
 		Command c = new Command("mkdir", null, null);
@@ -32,6 +38,8 @@ public class Terminal {
 		validCommands.add(c);
 
 		c = new Command("rm", null, null);
+		Map<String, String> validOption = new HashMap<String, String>();
+		validOption.put("d", null);
 		validCommands.add(c);
 
 		c = new Command("pwd", null, null);
@@ -39,16 +47,54 @@ public class Terminal {
 
 		c = new Command("session", null, null);
 		validCommands.add(c);
+
+		c = new Command("showFs", null, null);
+		validCommands.add(c);
 	}
 
+	// --------------------------------------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * Default constructor which we have overridden
+	 */
+
 	public Terminal() {
-		pwd = new File("/", Type.DIRECTORY.toString(), "/");
+		pwd = File.getRootDirectory();
 		initialiseCommandList();
 	}
 
+	// --------------------------------------------------------------------------------------------------------------------------------------------------
+	/**
+	 * PARSE THE COMMAND LINE INPUT TO GET THE COMMAND OBJECT
+	 * 
+	 * @param input
+	 * @return
+	 */
 	public Command getCommandFromInput(String input) {
 
-		Command c = new Command();
+		Command c = new Command("", null, null);
+		List<String> spaceSplitCommand = Arrays.asList(input.split("\\s+"));
+
+		Map<String, String> optionValue = new HashMap<String, String>();
+
+		if (spaceSplitCommand.size() == 0) {
+			return c;
+		}
+
+		c.setCommand(spaceSplitCommand.get(0));
+
+		if (spaceSplitCommand.size() >= 2 && spaceSplitCommand.get(1).contains("-")) {
+
+			if (spaceSplitCommand.size() >= 3) {
+				optionValue.put(spaceSplitCommand.get(1).substring(1), spaceSplitCommand.get(2));
+			} else {
+				optionValue.put(spaceSplitCommand.get(1).substring(1), null);
+			}
+			c.setOptionAndValue(optionValue);
+
+			return c;
+
+		}
 
 		// Regex to take care of varying length of spaces between commands
 		c.setCommand(input.split("\\s+")[0]);
@@ -66,82 +112,19 @@ public class Terminal {
 		return c;
 	}
 
-	void executePwd(Command c) {
-
-		System.out.println("PATH: " + pwd.getAbsolutePath());
-
-	}
+	// --------------------------------------------------------------------------------------------------------------------------------------------------
 
 	/**
-	 * Restoring the session state to a what it was at the start of the session
-	 * which in this case is particularly "/" directory state.
+	 * THE CORE LOGIC LIES HERE: Based on the commandline input , it construct a
+	 * File object of the destination directory on which we have to execute the
+	 * command
 	 * 
-	 * TBD: An extension of this would involve storing terminal state globally
-	 * somewhere , retrieving it at the start of the terminal session and
-	 * working on it .
-	 * 
+	 * @param command
+	 * @return
 	 */
-	void executeSessionCommand(Command command) {
-		pwd = File.getRootDirectory();
-		this.initialiseCommandList();
-
-		FileSystem.restoreFileSystemStateToSessionStart();
-
-	}
-
-	File getParentDirectory(File directory) {
-
-		File parentDirectory;
-
-		List<String> destPathFoldersList = Arrays.asList(directory.getAbsolutePath().split("/"));
-
-		String parentDirAbsPath = "";// String.join("/",
-										// destPathFoldersList.subList(0,
-										// destPathFoldersList.size() - 1));
-
-		if (destPathFoldersList.size() == 2 && destPathFoldersList.get(0).equals("")) {
-			// This means the parent directory has got to
-			return File.getRootDirectory();
-
-		}
-
-		String parentDirName = destPathFoldersList.get(destPathFoldersList.size() - 2);
-
-		parentDirAbsPath = String.join("/", destPathFoldersList.subList(0, destPathFoldersList.size() - 1));
-		parentDirectory = new File(parentDirName, Type.DIRECTORY.toString(), parentDirAbsPath);
-
-		return parentDirectory;
-	}
-
-	void makeDirectory(File destDirectory, File parentDirectoryOfDestDirectory) {
-
-		FileSystem.currentFS.get(parentDirectoryOfDestDirectory).add(destDirectory);
-		FileSystem.currentFS.put(destDirectory, new ArrayList<File>());
-	}
-
-	void displayAllSubDirectories(File directory) {
-
-		if (FileSystem.currentFS.containsKey(directory)) {
-
-			List<File> subDirectories = FileSystem.currentFS.get(directory);
-
-			String subDir = "";
-			for (int i = 0; i < subDirectories.size(); i++) {
-				subDir = subDir + subDirectories.get(i).getName() + "  ";
-			}
-
-			System.out.println(subDir);
-
-		} else {
-			System.out.println("ERR: Can't ls , dir not found : " + directory.getAbsolutePath());
-		}
-
-	}
-
 	File getDestinationDirectory(Command command) {
 
 		File destinationDirectory = new File("", Type.DIRECTORY.toString(), "");
-
 		String destinationDirectoryName = "";
 		String destinationDirectoryAbsPath = "";
 
@@ -159,7 +142,7 @@ public class Terminal {
 			// This path includes the destination directory as well
 			String destinationDirectoryPathFromCommand = command.getArgs().get(0);
 
-			// case: cd ..
+			// CASE: cd ..
 			if (("..").equals(destinationDirectoryPathFromCommand)) {
 
 				// can't go beyond root
@@ -176,7 +159,9 @@ public class Terminal {
 					}
 
 					else {
-						// going level up in directory heirarchy
+						// going level up in directory heirarchy .
+						// get parent directory of the utils can be used instead
+						// of this logic too.
 						directoriesFromRootToPwd = Arrays.asList(pwd.getAbsolutePath().split("/"));
 						destinationDirectoryName = pwd.getAbsolutePath().split("/")[directoriesFromRootToPwd.size()
 								- 2];
@@ -194,7 +179,7 @@ public class Terminal {
 
 			}
 
-			// Destination directory is root directory
+			// CASE : Example = cd / or ls /
 			if (("/").equals(destinationDirectoryPathFromCommand)) {
 
 				destinationDirectory.setName("/");
@@ -202,10 +187,9 @@ public class Terminal {
 				return destinationDirectory;
 			}
 
+			// CASE: Absolute path longer than '/'
 			if (("/").equals(Character.toString(destinationDirectoryPathFromCommand.charAt(0)))) {
 
-				// operate in root directory
-				// String destDirectory = pathToDirectory.sp
 				List<String> destPathFoldersList = Arrays.asList(destinationDirectoryPathFromCommand.split("/"));
 
 				String absolutePathToDestinationDirectory = destPathFoldersList.get(destPathFoldersList.size() - 1);
@@ -224,12 +208,9 @@ public class Terminal {
 
 			}
 
+			// CASE: Relative path
 			else {
 
-				// operate in root directory
-				// String destDirectory = pathToDirectory.sp
-
-				System.out.println("HEEEEREEE");
 				List<String> destPathFoldersList = Arrays.asList(destinationDirectoryPathFromCommand.split("/"));
 
 				if (pwd.equals(File.getRootDirectory())) {
@@ -239,13 +220,13 @@ public class Terminal {
 							.setAbsolutePath(pwd.getAbsolutePath() + "/" + destinationDirectoryPathFromCommand);
 				}
 
-				// case: cd xyz
+				// CASE: cd xyz
 				if (destPathFoldersList.size() == 1) {
 
 					destinationDirectory.setType(Type.DIRECTORY.toString());
 					destinationDirectory.setName(destinationDirectoryPathFromCommand);
 
-				} else {
+				} else { // CASE: cd xyz/m/n
 
 					/**
 					 * command : cd a/b/c then destinationDirectoryName = c
@@ -266,6 +247,47 @@ public class Terminal {
 
 	}
 
+	// --------------------------------------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * EXCECUTE THE COMMAND WHICH DISPLAYS THE PRESENT WORKING DIRECTORY
+	 * 
+	 * @param c
+	 */
+	void executePwd(Command c) {
+
+		System.out.println("PATH: " + pwd.getAbsolutePath());
+
+	}
+
+	// --------------------------------------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * Restoring the session state to a what it was at the start of the session
+	 * which in this case is particularly "/" directory state.
+	 * 
+	 * TBD: An extension of this would involve storing terminal state globally
+	 * somewhere , retrieving it at the start of the terminal session and
+	 * working on it .
+	 * 
+	 */
+	void executeSessionCommand(Command command) {
+		pwd = File.getRootDirectory();
+		this.initialiseCommandList();
+
+		FileSystem.restoreFileSystemStateToSessionStart();
+
+		System.out.println("SUCC: CLEARED: RESET TO ROOT");
+
+	}
+
+	// --------------------------------------------------------------------------------------------------------------------------------------------------
+	/**
+	 * EXECUTE 'CD' COMMAND
+	 * 
+	 * @param command
+	 */
+
 	void executeCd(Command command) {
 
 		File destDirectory = getDestinationDirectory(command);
@@ -275,17 +297,30 @@ public class Terminal {
 		}
 
 		else {
-			System.out.println("ERR: This directory does not exist : " + destDirectory.getAbsolutePath());
+			System.out.println("ERR: THIS DIRECTORY DOES NOT EXIST : " + destDirectory.getAbsolutePath());
 		}
 
 	}
 
+	// --------------------------------------------------------------------------------------------------------------------------------------------------
+	/**
+	 * EXECUTE 'LS' COMMAND
+	 * 
+	 * @param command
+	 */
 	void executeLs(Command command) {
 		File destDirectory = getDestinationDirectory(command);
 
-		displayAllSubDirectories(destDirectory);
+		linuxPathTraversalUtils.displayAllSubDirectories(destDirectory);
+
 	}
 
+	// --------------------------------------------------------------------------------------------------------------------------------------------------
+	/**
+	 * EXECUTE MAKE DIRECTORY COMMAND
+	 * 
+	 * @param command
+	 */
 	void executeMkdir(Command command) {
 
 		File destDirectory = getDestinationDirectory(command);
@@ -293,10 +328,10 @@ public class Terminal {
 		// This dest directory is including the one we have to create.
 		// So we have to move a level up
 
-		File parentDirOfDestDirectory = getParentDirectory(destDirectory);
+		File parentDirOfDestDirectory = linuxPathTraversalUtils.getParentDirectory(destDirectory);
 
 		if (FileSystem.currentFS.containsKey(parentDirOfDestDirectory)) {
-			makeDirectory(destDirectory, parentDirOfDestDirectory);
+			linuxPathTraversalUtils.makeDirectory(destDirectory, parentDirOfDestDirectory);
 		} else {
 			System.out.println("Cannot create directory as this path doesn't exist : "
 					+ parentDirOfDestDirectory.getAbsolutePath());
@@ -304,13 +339,107 @@ public class Terminal {
 
 	}
 
+	// --------------------------------------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * EXECUTE REMOVE COMMAND
+	 * 
+	 * @param command
+	 */
+
+	void executeRemove(Command command) {
+
+		String directoryPathToBeRemoved;
+
+		// CASE: rm a (invalid)
+		if (command.getArgs() != null) {
+			System.out.println(
+					"ERR: " + command.getArgs().get(0) + " IS A DIRECTORY. SUPPLY -D OPTION TO MAKE THIS WORK");
+			return;
+		}
+
+		else if (command.getOptionAndValue() == null) {
+			System.out.println("ERR: NO ARGUMENTS PROVIDED FOR RM");
+			return;
+		}
+
+		List<String> args = new ArrayList<String>();
+
+		Map<String, String> optionAndValues = command.getOptionAndValue();
+
+		if (optionAndValues.containsKey("d")) {
+
+			if (optionAndValues.get("d") == null) {
+				System.out.println("ERR: NO VALUES PROVIDED FOR OPTION 'D' . NO OPERATION CAN BE PERFORMED");
+				return;
+
+			} else {
+				directoryPathToBeRemoved = optionAndValues.get("d");
+				args.add(directoryPathToBeRemoved);
+			}
+		} else {
+			System.out.println("ERR: ILLEGAL OPTION GIVEN. -d is only supported");
+			return;
+		}
+
+		File destinationDirectory = getDestinationDirectory(new Command("rm", args, null));
+
+		if (FileSystem.currentFS.containsKey(destinationDirectory)) {
+
+			// We can only remove a directory provided its empty
+			if (FileSystem.currentFS.get(destinationDirectory).size() == 0) {
+				FileSystem.currentFS.remove(destinationDirectory);
+
+				// You also have to remove it from the list of subdirectories of
+				// its parent directory
+				File parentDirectory = linuxPathTraversalUtils.getParentDirectory(destinationDirectory);
+				FileSystem.currentFS.get(parentDirectory).remove(destinationDirectory);
+
+			} else {
+				System.out.println("ERR: DIRECTORY " + destinationDirectory.getAbsolutePath()
+						+ " CANNOT BE REMOVED AS IT IS NOT EMPTY");
+			}
+
+		} else {
+			System.out.println("ERR: THIS DIRECTORY DOES NOT EXIST. CANNOT BE REMOVED");
+		}
+
+	}
+
+	// --------------------------------------------------------------------------------------------------------------------------------------------------
+
+	void executeShowFS(Command c) {
+
+		for (Entry<File, List<File>> a : FileSystem.currentFS.entrySet()) {
+
+			System.out.println("Abs Path : " + a.getKey().getAbsolutePath());
+			System.out.println("Directory Name  : " + a.getKey().getName());
+
+			System.out.println("Subdirectories : ");
+
+			for (int i = 0; i < a.getValue().size(); i++) {
+				System.out.print(a.getValue().get(i).getName() + " ");
+			}
+
+			System.out.print("\n");
+		}
+	}
+
+	// --------------------------------------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * Checks whether the command is a valid one and calls the code to execute
+	 * it
+	 * 
+	 * @param c
+	 */
 	void processCommand(Command c) {
 
 		// System.out.println("Processing the command " + c);
 
 		if (validCommands.contains(c)) {
-			// System.out.println("Processing the valid command " + c);
 
+			sessionHistory.add(c);
 			if (c.getCommand().equals("mkdir")) {
 				executeMkdir(c);
 			}
@@ -329,29 +458,40 @@ public class Terminal {
 
 			else if (c.getCommand().equals("session")) {
 				executeSessionCommand(c);
+			} else if (c.getCommand().equals("rm")) {
+				executeRemove(c);
+			} else if (c.getCommand().equals("showFs")) {
+				executeShowFS(c);
 			}
+		} else {
+			System.out.println("ERR : CANT RECOGNISE INPUT");
 		}
 	}
 
-	public static void printFileSystem() {
-
-		System.out.println("---------FILESYSTEM-----------");
-		System.out.println(FileSystem.currentFS);
-	}
-
+	/**
+	 * Driver method
+	 * 
+	 * @param args
+	 */
 	public static void main(String args[]) {
 		Terminal T = new Terminal();
 
-		System.out.println("$Starting the linux path traversal application");
-		System.out.print("$");
+		System.out.println("$STARTING THE LINUX PATH TRAVERSAL APPLICATION");
 
 		Scanner myObj = new Scanner(System.in);
 
 		while (true) {
+			System.out.print("$");
 			Command c = T.getCommandFromInput(myObj.nextLine());
 
+			// This is to simply continue when the user keeps putting spaces and
+			// presses enter and
+			// there is no actual command
+			if ("".equals(c.getCommand())) {
+				continue;
+			}
+
 			T.processCommand(c);
-			System.out.print("$");
 
 		}
 
