@@ -41,6 +41,10 @@ public class linuxPathTraversalUtils {
 
 		File parentDirectory;
 
+		if (File.getRootDirectory().equals(directory)) {
+			return File.getRootDirectory();
+		}
+
 		List<String> destPathFoldersList = Arrays.asList(directory.getAbsolutePath().split("/"));
 
 		String parentDirAbsPath = "";// String.join("/",

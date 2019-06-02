@@ -314,6 +314,11 @@ public class Terminal {
 	 */
 	void executeMkdir(Command command) {
 
+		if (command.getArgs().size() == 0) {
+			System.out.println("ERR: Cannot create directory. No path supplied");
+			return;
+		}
+
 		File destDirectory = getDestinationDirectory(command);
 
 		// This dest directory is including the one we have to create.
@@ -346,15 +351,15 @@ public class Terminal {
 
 		String directoryPathToBeRemoved;
 
-		// CASE: rm a (invalid)
-		if (command.getArgs() != null) {
-			System.out.println(
-					"ERR: " + command.getArgs().get(0) + " IS A DIRECTORY. SUPPLY -D OPTION TO MAKE THIS WORK");
+		if (command.getOptionAndValue() == null && command.getArgs().size() == 0) {
+			System.out.println("ERR: NO ARGUMENTS PROVIDED FOR RM");
 			return;
 		}
 
-		else if (command.getOptionAndValue() == null) {
-			System.out.println("ERR: NO ARGUMENTS PROVIDED FOR RM");
+		// CASE: rm a (invalid)
+		else if (command.getArgs() != null) {
+			System.out.println(
+					"ERR: " + command.getArgs().get(0) + " IS A DIRECTORY. SUPPLY -D OPTION TO MAKE THIS WORK");
 			return;
 		}
 
